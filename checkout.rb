@@ -34,18 +34,6 @@ rules = [
   }
 ]
 
-
-rules = [
-  {
-    predicate: -> (items) { items.select {|i| i[:name] == 'Red Scarf' }.size >= 2 },
-    apply: -> (items)     { items.select {|i| i[:name] == 'Red Scarf' }.each { |i| i[:price] = 8.5 } }
-  },
-  {
-    predicate: -> (items) { items.map { |i| i[:price] }.sum > 60 },
-    apply: -> (items)     { items.each { |i| i[:price] = (i[:price] * 0.9).round(2) } }
-  }
-]
-
 items = [
   {
     id: '001',
