@@ -1,3 +1,5 @@
+require 'pry'
+
 class Checkout
   def initialize(checkout_rules)
     @checkout_rules = checkout_rules
@@ -9,12 +11,29 @@ class Checkout
   end
 
   def total
-      appropriate_rules = @checkout_rules.select {|rule| rule[:predicate].call(@items) }
-      appropriate_rules.each {|rule| rule[:apply].call(@items) }
-      puts @items.inspect
-      @items.sum {|i| i[:price] }
+      individual_rules = @checkout_rules.select { |rule| rule.has_key?(:individual) && rule[:individual][:predicate].call(@items) }
+      individual_rules.each { |rule| rule[:individual][:apply].call(@items) }
+
+      total_rules = @checkout_rules.select { |rule| rule.has_key?(:total) && rule[:total][:predicate].call(@items) }
+      total = @items.sum {|i| i[:price] }
+      total_rules.empty? ? total : (total * 0.9).round(2)
   end
 end
+
+rules = [
+  {
+    individual: {
+      predicate: -> (items) { items.select {|i| i[:name] == 'Red Scarf' }.size >= 2 },
+      apply: -> (items)     { items.select {|i| i[:name] == 'Red Scarf' }.each { |i| i[:price] = 8.5 } }
+    }
+  },
+  {
+    total: {
+      predicate: -> (items) { items.map { |i| i[:price] }.sum > 60 }
+    }
+  }
+]
+
 
 rules = [
   {
@@ -23,7 +42,7 @@ rules = [
   },
   {
     predicate: -> (items) { items.map { |i| i[:price] }.sum > 60 },
-    apply: -> (items)     { items.each { |i| (i[:price] *= 0.9).round(2) } }
+    apply: -> (items)     { items.each { |i| i[:price] = (i[:price] * 0.9).round(2) } }
   }
 ]
 
@@ -45,9 +64,9 @@ items = [
   }
 ]
 
-co = Checkout.new(rules)
-co.scan(items[0])
-co.scan(items[1])
-co.scan(items[0])
-co.scan(items[2])
-puts co.total
+# co = Checkout.new(rules)
+# co.scan(items[0])
+# co.scan(items[1])
+# co.scan(items[0])
+# co.scan(items[2])
+# puts co.total
